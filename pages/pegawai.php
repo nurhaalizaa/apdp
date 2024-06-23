@@ -56,7 +56,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
                           echo "<td>
                                   <a href='editpegawai.php?id={$row['id']}' class='btn btn-secondary m-1'>Edit</a>
                                   <a href='hapuspegawai.php?id={$row['id']}' class='btn btn-danger m-1'  onclick=\"return confirm('Apakah Anda yakin akan menghapus pegawai ini?')\">Hapus</a>
-                                  <a href='detailpegawai.php?id={$row['id']}' class='btn btn-info m-1'>Detail</a>
+                                  <a href='detailpegawai.php?id={$row['id']}' class='btn btn-warning m-1'>Detail</a>
                                 </td>";
                           echo "</tr>";
                           $count++;

@@ -23,15 +23,6 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
     $statement_male = $pdo->prepare($query_male);
     $statement_male->execute();
     $total_laki_laki = $statement_male->fetch(PDO::FETCH_ASSOC)['total'];
-
-    // Query untuk mengambil data jumlah pegawai per jabatan
-    $query = "SELECT jabatan, COUNT(*) as jumlah_pegawai FROM pegawai GROUP BY jabatan";
-    $statement = $pdo->prepare($query);
-    $statement->execute();
-    $results = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-    // Encode hasil query menjadi format JSON
-    $data = json_encode($results);
 ?>
 <!doctype html>
 <html lang="en">
@@ -41,7 +32,8 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
   <title>APDP</title>
   <link rel="shortcut icon" type="image/png" href="../assets/images/logos/logo.png" />
   <link rel="stylesheet" href="../assets/css/styles.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -112,50 +104,64 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] !== 'admin') {
           </div>
           </div>
         </div>
-        <canvas id="pegawaiChart"></canvas>
+        <!-- <canvas id="pegawaiChart"></canvas> -->
 
+        <canvas id="myChart"></canvas>
       </div>
     </div>
   </div>
+
   <script>
-        // Data pegawai dari PHP (dikonversi dari JSON)
-        var dataPegawai = <?php echo $data; ?>;
+    $(document).ready(function() {
+      // Ketika halaman dimuat, panggil fungsi untuk mengambil data dan membangun chart
+      fetchDataAndBuildChart();
+    });
 
-        // Pisahkan label dan data untuk chart
-        var labels = [];
-        var jumlahPegawai = [];
-        dataPegawai.forEach(function(item) {
-            labels.push(item.jabatan);
-            jumlahPegawai.push(item.jumlah_pegawai);
-        });
+    function fetchDataAndBuildChart() {
+      $.ajax({
+        url: 'chart.php', // URL ke file PHP yang menyediakan data jumlah pegawai tiap jabatan
+        type: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          // Panggil fungsi untuk membangun chart dengan data yang diterima
+          buildChart(data);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          // Tangani kesalahan jika permintaan gagal
+          console.error('Error fetching data:', textStatus, errorThrown);
+        }
+      });
+    }
 
-        // Buat chart menggunakan Chart.js
-        var ctx = document.getElementById('pegawaiChart').getContext('2d');
-        var myChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Jumlah Pegawai per Jabatan',
-                    data: jumlahPegawai,
-                    fill: false, // Jangan mengisi area bawah garis
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        stepSize: 1
-                    }
-                }
-            }
-        });
-    </script>
+    function buildChart(data) {
+      // Ambil konteks dari elemen canvas
+      var ctx = document.getElementById('myChart').getContext('2d');
+
+      // Buat chart baru dengan tipe grafik garis
+      var myChart = new Chart(ctx, {
+        type: 'line', // Tipe chart
+        data: {
+          labels: data.labels, // Label sumbu X (jabatan)
+          datasets: [{
+            label: 'Jumlah Pegawai',
+            data: data.values, // Data nilai untuk setiap label (jumlah pegawai)
+            borderColor: 'rgba(54, 162, 235, 1)', // Warna garis grafik
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true, // Mulai sumbu Y dari 0
+                stepSize: 1 // Langkah setiap 1
+              }
+            }]
+          }
+        }
+      });
+    }
+  </script>
     
   <script src="../assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="../assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
